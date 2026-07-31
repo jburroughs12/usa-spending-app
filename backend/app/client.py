@@ -99,9 +99,27 @@ class USASpendingClient:
         """Fetch all federal top-tier agencies. No API key or rate limit."""
         return self._get("/references/toptier_agencies/")
 
+    def get_recipient_profile(self, recipient_name: str, limit: int = 100) -> dict:
+        """Fetch a recipient's recent awards to build a NAICS/agency capability profile."""
+        five_years_ago = (datetime.today().replace(year=datetime.today().year - 5)).strftime("%Y-%m-%d")
+        payload = {
+            "filters": {
+                "award_type_codes": ["A", "B", "C", "D"],
+                "time_period": [{"start_date": five_years_ago, "end_date": datetime.today().strftime("%Y-%m-%d")}],
+                "recipient_search_text": [recipient_name],
+            },
+            "fields": ["NAICS Code", "Awarding Agency", "Award Amount"],
+            "sort": "Award Amount",
+            "order": "desc",
+            "limit": limit,
+            "page": 1,
+        }
+        return self._post("/search/spending_by_award/", payload)
+
     def search_awards(
         self,
         psc_codes: list[str] | None = None,
+        naics_codes: list[str] | None = None,
         agencies: list[str] | None = None,
         recipient_text: str | None = None,
         start_date: str | None = None,
@@ -127,6 +145,8 @@ class USASpendingClient:
 
         if psc_codes:
             filters["psc_codes"] = {"require": _psc_require(psc_codes)}
+        if naics_codes:
+            filters["naics_codes"] = {"require": naics_codes}
         if agencies:
             filters["agencies"] = [
                 {"type": "awarding", "tier": "toptier", "name": name}
@@ -153,6 +173,7 @@ class USASpendingClient:
                 "Contract Award Type",
                 "Type of Set Aside",
                 "Place of Performance State Code",
+                "NAICS Code",
             ],
             "sort": sort,
             "order": order,
@@ -166,6 +187,7 @@ class USASpendingClient:
         self,
         category: str,
         psc_codes: list[str] | None = None,
+        naics_codes: list[str] | None = None,
         agencies: list[str] | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
@@ -184,6 +206,8 @@ class USASpendingClient:
 
         if psc_codes:
             filters["psc_codes"] = {"require": _psc_require(psc_codes)}
+        if naics_codes:
+            filters["naics_codes"] = {"require": naics_codes}
         if agencies:
             filters["agencies"] = [
                 {"type": "awarding", "tier": "toptier", "name": name}
