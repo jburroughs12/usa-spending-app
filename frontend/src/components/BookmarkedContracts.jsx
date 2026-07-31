@@ -31,7 +31,7 @@ export default function BookmarkedContracts({ bookmarks, onToggleBookmark, onCle
       <div className="results-header">
         <span>{bookmarks.length} bookmarked contract{bookmarks.length !== 1 ? 's' : ''}</span>
         <div className="results-actions">
-          <button className="secondary" onClick={() => exportToCsv(bookmarks, 'bbs-bookmarked-contracts.csv')}>Export CSV</button>
+          <button className="secondary" onClick={() => exportToCsv(bookmarks, 'bookmarked-contracts.csv')}>Export CSV</button>
           <button className="secondary" onClick={onClear}>Clear All</button>
         </div>
       </div>
