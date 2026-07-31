@@ -76,21 +76,26 @@ export default function ResultsTable({ data, hasNext, page, onPageChange, onTogg
                       onClick={(e) => { e.stopPropagation(); onToggleBookmark?.(row); }}
                       title={saved ? 'Remove bookmark' : 'Bookmark this contract'}
                     >
-                      {saved ? '\u2605' : '\u2606'}
+                      {saved ? '★' : '☆'}
                     </button>
                   </td>
-                  <td className="recipient">{row['Recipient Name'] || '\u2014'}</td>
-                  <td>{row['Awarding Agency'] || '\u2014'}</td>
-                  <td className="office">{row['Awarding Sub Agency'] || '\u2014'}</td>
-                  <td className="amount">{formatDollars(row['Award Amount'])}</td>
-                  <td className="description">{row['Description']?.slice(0, 120) || '\u2014'}</td>
-                  <td>{row['Type of Set Aside'] || '\u2014'}</td>
-                  <td>{row['Start Date'] || '\u2014'}</td>
-                  <td>{row['End Date'] || '\u2014'}</td>
-                  <td className={expiring ? 'days-warn' : ''}>
-                    {days != null ? (days > 0 ? days : 'Expired') : '\u2014'}
+                  <td className="recipient">
+                    {row['Recipient Name'] || '—'}
+                    {row.reseller_partner_match && (
+                      <span className="partner-badge" title="Grainger reseller partner">Partner</span>
+                    )}
                   </td>
-                  <td className="award-id">{row['Award ID'] || '\u2014'}</td>
+                  <td>{row['Awarding Agency'] || '—'}</td>
+                  <td className="office">{row['Awarding Sub Agency'] || '—'}</td>
+                  <td className="amount">{formatDollars(row['Award Amount'])}</td>
+                  <td className="description">{row['Description']?.slice(0, 120) || '—'}</td>
+                  <td>{row['Type of Set Aside'] || '—'}</td>
+                  <td>{row['Start Date'] || '—'}</td>
+                  <td>{row['End Date'] || '—'}</td>
+                  <td className={expiring ? 'days-warn' : ''}>
+                    {days != null ? (days > 0 ? days : 'Expired') : '—'}
+                  </td>
+                  <td className="award-id">{row['Award ID'] || '—'}</td>
                 </tr>
               );
             })}
