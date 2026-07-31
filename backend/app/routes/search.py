@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Query
 
 from ..client import USASpendingClient
-from ..config import ALL_AGENCY_NAMES, ALL_PSCS, AGENCIES
+from ..config import SET_ASIDE_RECIPIENT_TYPES
 
 router = APIRouter()
 client = USASpendingClient()
@@ -11,8 +11,8 @@ client = USASpendingClient()
 
 @router.get("/api/search")
 def search_awards(
-    agency: str | None = Query(None, description="Agency short name (VA, DHS, DOD, etc.) or omit for all"),
-    psc: str | None = Query(None, description="Comma-separated PSC codes, or omit for all BBS codes"),
+    agency: str | None = Query(None, description="Comma-separated federal agency names, or omit for all"),
+    psc: str | None = Query(None, description="Comma-separated PSC codes, or omit for all"),
     recipient: str | None = Query(None, description="Recipient/vendor name search text"),
     start_date: str | None = Query(None, description="Start date YYYY-MM-DD"),
     end_date: str | None = Query(None, description="End date YYYY-MM-DD"),
@@ -22,38 +22,9 @@ def search_awards(
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=100),
 ):
-    # Resolve agency short name to full name
-    agency_names = None
-    if agency:
-        names = []
-        for a in agency.split(","):
-            a = a.strip().upper()
-            if a in AGENCIES:
-                names.append(AGENCIES[a])
-            else:
-                names.append(a)
-        agency_names = names
-    else:
-        agency_names = ALL_AGENCY_NAMES
-
-    # Resolve PSC codes
-    psc_codes = None
-    if psc:
-        psc_codes = [p.strip() for p in psc.split(",")]
-    else:
-        psc_codes = ALL_PSCS
-
-    # Resolve set-aside to USASpending recipient_type_names
-    set_aside_types = None
-    if set_aside:
-        mapping = {
-            "SDVOSB": ["service_disabled_veterans_owned_business"],
-            "8A": ["8a_program_participant"],
-            "WOSB": ["women_owned_small_business"],
-            "HUBZONE": ["historically_underutilized_business_zone"],
-            "SB": ["small_business", "other_than_small_business"],
-        }
-        set_aside_types = mapping.get(set_aside.upper())
+    agency_names = [a.strip() for a in agency.split(",")] if agency else None
+    psc_codes = [p.strip() for p in psc.split(",")] if psc else None
+    set_aside_types = SET_ASIDE_RECIPIENT_TYPES.get(set_aside.upper()) if set_aside else None
 
     data = client.search_awards(
         psc_codes=psc_codes,
