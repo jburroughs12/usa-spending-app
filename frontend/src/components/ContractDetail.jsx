@@ -11,6 +11,10 @@ function formatDollars(amount) {
 export default function ContractDetail({ award, onClose }) {
   const piid = award?.['Award ID'];
   const internalId = award?.internal_id;
+  const usaSpendingId = award?.generated_internal_id || internalId;
+  const usaSpendingUrl = usaSpendingId
+    ? `https://www.usaspending.gov/award/${encodeURIComponent(usaSpendingId)}`
+    : null;
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -57,12 +61,23 @@ export default function ContractDetail({ award, onClose }) {
       });
   }
 
+  const headerActions = (
+    <div className="detail-header-actions">
+      {usaSpendingUrl && (
+        <a className="secondary" href={usaSpendingUrl} target="_blank" rel="noreferrer">
+          View on USASpending.gov
+        </a>
+      )}
+      <button className="secondary" onClick={onClose}>Close</button>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="detail-panel">
         <div className="detail-header">
           <h3>Contract Detail</h3>
-          <button className="secondary" onClick={onClose}>Close</button>
+          {headerActions}
         </div>
         <div className="detail-loading">Loading USASpending.gov data...</div>
       </div>
@@ -74,7 +89,7 @@ export default function ContractDetail({ award, onClose }) {
       <div className="detail-panel">
         <div className="detail-header">
           <h3>Contract Detail</h3>
-          <button className="secondary" onClick={onClose}>Close</button>
+          {headerActions}
         </div>
         <div className="error">{error}</div>
       </div>
@@ -86,7 +101,7 @@ export default function ContractDetail({ award, onClose }) {
       <div className="detail-panel">
         <div className="detail-header">
           <h3>Contract Detail</h3>
-          <button className="secondary" onClick={onClose}>Close</button>
+          {headerActions}
         </div>
         <div className="detail-empty">No USASpending.gov record found for {piid}</div>
       </div>
@@ -96,8 +111,11 @@ export default function ContractDetail({ award, onClose }) {
   return (
     <div className="detail-panel">
       <div className="detail-header">
-        <h3>Contract Detail — {data.piid}</h3>
-        <button className="secondary" onClick={onClose}>Close</button>
+        <div className="detail-header-left">
+          <h3>Contract Detail — {data.piid}</h3>
+          {data.set_aside_type && <span className="set-aside-badge">{data.set_aside_type}</span>}
+        </div>
+        {headerActions}
       </div>
 
       <div className="detail-grid">
