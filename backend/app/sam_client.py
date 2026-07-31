@@ -2,10 +2,14 @@
 
 import hashlib
 import json
+import logging
 import os
 import time
+from pathlib import Path
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 SAM_BASE_URL = "https://api.sam.gov/contract-awards/v1/search"
 SAM_OPPORTUNITIES_URL = "https://api.sam.gov/opportunities/v2/search"
@@ -13,7 +17,36 @@ CACHE_TTL = 3600  # 1 hour
 OPPORTUNITIES_CACHE_TTL = 86400  # 24 hours — solicitations only need a daily refresh
 MAX_CACHE_SIZE = 500
 
+# Persisted to disk so a Render free-tier idle restart (which wipes the process
+# but keeps the local disk within the same deploy) doesn't throw away results
+# we already paid for out of SAM.gov's tight daily quota.
+_CACHE_FILE = Path(__file__).resolve().parent / ".cache" / "sam_cache.json"
+
 _cache: dict[str, tuple[float, dict]] = {}
+
+
+def _load_cache_from_disk():
+    try:
+        raw = json.loads(_CACHE_FILE.read_text())
+        for key, (ts, data) in raw.items():
+            _cache[key] = (ts, data)
+    except FileNotFoundError:
+        pass
+    except Exception:
+        logger.exception("Failed to load SAM.gov cache from disk")
+
+
+def _persist_cache_to_disk():
+    try:
+        _CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        tmp = _CACHE_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(_cache))
+        tmp.replace(_CACHE_FILE)
+    except Exception:
+        logger.exception("Failed to persist SAM.gov cache to disk")
+
+
+_load_cache_from_disk()
 
 
 def _cache_key(params: dict) -> str:
@@ -26,15 +59,21 @@ def _get_cached(key: str, ttl: int = CACHE_TTL) -> dict | None:
         ts, data = _cache[key]
         if time.time() - ts < ttl:
             return data
-        del _cache[key]
     return None
 
 
+def _get_stale(key: str) -> dict | None:
+    """Return cached data regardless of age — used as a 429 fallback."""
+    entry = _cache.get(key)
+    return entry[1] if entry else None
+
+
 def _set_cache(key: str, data: dict):
-    if len(_cache) >= MAX_CACHE_SIZE:
+    if len(_cache) >= MAX_CACHE_SIZE and key not in _cache:
         oldest = min(_cache, key=lambda k: _cache[k][0])
         del _cache[oldest]
     _cache[key] = (time.time(), data)
+    _persist_cache_to_disk()
 
 
 class SAMClient:
@@ -57,6 +96,10 @@ class SAMClient:
         query = {**params, "api_key": self.api_key}
         r = self.session.get(SAM_BASE_URL, params=query, timeout=20)
         if r.status_code == 429:
+            stale = _get_stale(key)
+            if stale is not None:
+                logger.warning("SAM.gov rate limited; serving stale cached contract award data")
+                return stale
             raise RuntimeError("SAM.gov rate limit reached. Try again later.")
         r.raise_for_status()
         data = r.json()
@@ -67,10 +110,17 @@ class SAMClient:
         """Fetch federal solicitations posted in a date range (MM/dd/yyyy).
 
         Cached for 24h since solicitation listings only need a daily refresh —
-        keeps this well under SAM.gov's strict per-key rate limit.
+        keeps this well under SAM.gov's strict per-key rate limit. If a fresh
+        fetch gets rate limited, falls back to whatever we last fetched
+        successfully (even if stale) rather than erroring out entirely.
         """
         params = {"postedFrom": posted_from, "postedTo": posted_to, "limit": limit, "offset": offset}
         key = _cache_key({"opportunities": params})
+        # The date range shifts daily (rolling window), so exact-key hits are
+        # rare across days — keep a fixed "last known good" slot too, so we
+        # always have *something* to fall back to once any fetch has ever
+        # succeeded, even after the quota resets mid-window tomorrow.
+        latest_key = _cache_key({"opportunities_latest": True})
         cached = _get_cached(key, ttl=OPPORTUNITIES_CACHE_TTL)
         if cached is not None:
             return cached
@@ -78,10 +128,20 @@ class SAMClient:
         query = {**params, "api_key": self.api_key}
         r = self.session.get(SAM_OPPORTUNITIES_URL, params=query, timeout=30)
         if r.status_code == 429:
-            raise RuntimeError("SAM.gov rate limit reached. Try again later.")
+            stale = _get_stale(key) or _get_stale(latest_key)
+            if stale is not None:
+                logger.warning("SAM.gov rate limited; serving stale cached opportunities data")
+                return stale
+            raise RuntimeError(
+                "SAM.gov rate limit reached for the Opportunities API. This is a separate, much "
+                "stricter daily quota than the Contract Awards API — individual SAM.gov accounts "
+                "without an entity/system-account role are limited to 10 requests/day. It resets "
+                "daily; results are cached for 24h once a fetch succeeds."
+            )
         r.raise_for_status()
         data = r.json()
         _set_cache(key, data)
+        _set_cache(latest_key, data)
         return data
 
     def search_by_piid(self, piid: str) -> dict | None:
