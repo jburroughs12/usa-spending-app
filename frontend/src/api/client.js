@@ -4,10 +4,13 @@ export async function searchAwards(params) {
   const qs = new URLSearchParams();
   if (params.agency) qs.set('agency', params.agency);
   if (params.psc) qs.set('psc', params.psc);
+  if (params.naics) qs.set('naics', params.naics);
   if (params.recipient) qs.set('recipient', params.recipient);
   if (params.startDate) qs.set('start_date', params.startDate);
   if (params.endDate) qs.set('end_date', params.endDate);
   if (params.setAside) qs.set('set_aside', params.setAside);
+  if (params.expiringWithinDays) qs.set('expiring_within_days', params.expiringWithinDays);
+  if (params.expiringFromDays) qs.set('expiring_from_days', params.expiringFromDays);
   if (params.sort) qs.set('sort', params.sort);
   if (params.order) qs.set('order', params.order);
   if (params.page) qs.set('page', params.page);
@@ -23,11 +26,31 @@ export async function getSpendingSummary(params) {
   if (params.groupBy) qs.set('group_by', params.groupBy);
   if (params.agency) qs.set('agency', params.agency);
   if (params.psc) qs.set('psc', params.psc);
+  if (params.naics) qs.set('naics', params.naics);
   if (params.startDate) qs.set('start_date', params.startDate);
   if (params.endDate) qs.set('end_date', params.endDate);
 
   const res = await fetch(`${BASE}/spending-summary?${qs}`);
   if (!res.ok) throw new Error(`Summary failed: ${res.status}`);
+  return res.json();
+}
+
+export async function getSolicitations(params) {
+  const qs = new URLSearchParams();
+  if (params.naics) qs.set('naics', params.naics);
+  if (params.setAside) qs.set('set_aside', params.setAside);
+  if (params.keyword) qs.set('keyword', params.keyword);
+  if (params.postedFrom) qs.set('posted_from', params.postedFrom);
+  if (params.postedTo) qs.set('posted_to', params.postedTo);
+  if (params.activeOnly != null) qs.set('active_only', params.activeOnly);
+  if (params.limit) qs.set('limit', params.limit);
+
+  const res = await fetch(`${BASE}/solicitations?${qs}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    const detail = body?.detail || `Solicitations failed: ${res.status}`;
+    throw new Error(detail);
+  }
   return res.json();
 }
 
