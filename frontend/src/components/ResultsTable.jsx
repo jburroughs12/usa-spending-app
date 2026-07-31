@@ -89,7 +89,7 @@ export default function ResultsTable({ data, hasNext, page, onPageChange, onTogg
                   <td className="office">{row['Awarding Sub Agency'] || '—'}</td>
                   <td className="amount">{formatDollars(row['Award Amount'])}</td>
                   <td className="description">{row['Description']?.slice(0, 120) || '—'}</td>
-                  <td>{row['Type of Set Aside'] || '—'}</td>
+                  <td>{row['Type of Set Aside'] || 'Full/Open'}</td>
                   <td>{row['Start Date'] || '—'}</td>
                   <td>{row['End Date'] || '—'}</td>
                   <td className={expiring ? 'days-warn' : ''}>
