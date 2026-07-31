@@ -1,4 +1,4 @@
-"""FastAPI application for BBS Federal Spending Search."""
+"""FastAPI application for Federal Spending Search."""
 
 import os
 from pathlib import Path
@@ -14,7 +14,7 @@ load_dotenv(_env_path)
 
 from .routes import search, spending, reference, contract_detail, award_detail
 
-app = FastAPI(title="BBS Spending Search", version="0.1.0")
+app = FastAPI(title="Federal Spending Search", version="0.1.0")
 
 _cors_origins = os.environ.get(
     "CORS_ORIGINS", "http://localhost:5173,http://localhost:8000"
