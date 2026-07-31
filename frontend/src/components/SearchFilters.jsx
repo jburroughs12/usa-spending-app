@@ -1,31 +1,58 @@
 import { useState, useEffect } from 'react';
 import { getReferenceData } from '../api/client';
 
+const EXPIRING_PRESETS = [
+  { label: 'Any time', value: '' },
+  { label: 'Next 30 days', value: '30' },
+  { label: 'Next 90 days', value: '90' },
+  { label: 'Next 180 days', value: '180' },
+  { label: 'Next 365 days', value: '365' },
+];
+
 export default function SearchFilters({ onSearch, loading }) {
   const [refData, setRefData] = useState(null);
   const [agency, setAgency] = useState('');
   const [psc, setPsc] = useState('');
+  const [naicsCodes, setNaicsCodes] = useState([]);
   const [recipient, setRecipient] = useState('');
   const [setAside, setSetAside] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [expiringWithinDays, setExpiringWithinDays] = useState('');
 
   useEffect(() => {
     getReferenceData().then(setRefData).catch(console.error);
   }, []);
 
+  function toggleNaics(code) {
+    setNaicsCodes(prev =>
+      prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
+    );
+  }
+
   function handleSubmit(e) {
     e.preventDefault();
-    onSearch({ agency, psc, recipient, setAside, startDate, endDate });
+    onSearch({
+      agency,
+      psc,
+      naics: naicsCodes.length ? naicsCodes.join(',') : undefined,
+      recipient,
+      setAside,
+      startDate,
+      endDate,
+      expiringWithinDays: expiringWithinDays || undefined,
+    });
   }
 
   function handleReset() {
     setAgency('');
     setPsc('');
+    setNaicsCodes([]);
     setRecipient('');
     setSetAside('');
     setStartDate('');
     setEndDate('');
+    setExpiringWithinDays('');
     onSearch({});
   }
 
@@ -44,6 +71,23 @@ export default function SearchFilters({ onSearch, loading }) {
           ))}
         </select>
       </label>
+
+      <label>
+        NAICS Codes
+        <span className="filter-hint">Blank = default Grainger-relevant set</span>
+      </label>
+      <div className="naics-checklist">
+        {refData?.naics_codes.map(n => (
+          <label key={n.code} className="naics-checkbox">
+            <input
+              type="checkbox"
+              checked={naicsCodes.includes(n.code)}
+              onChange={() => toggleNaics(n.code)}
+            />
+            <span>{n.code} — {n.description}</span>
+          </label>
+        ))}
+      </div>
 
       <label>
         Product/Service Code (PSC)
@@ -71,6 +115,15 @@ export default function SearchFilters({ onSearch, loading }) {
           <option value="">Any Set-Aside</option>
           {refData?.set_aside_types.map(s => (
             <option key={s.code} value={s.code}>{s.code} — {s.name}</option>
+          ))}
+        </select>
+      </label>
+
+      <label>
+        Expiring Within
+        <select value={expiringWithinDays} onChange={e => setExpiringWithinDays(e.target.value)}>
+          {EXPIRING_PRESETS.map(p => (
+            <option key={p.value} value={p.value}>{p.label}</option>
           ))}
         </select>
       </label>
