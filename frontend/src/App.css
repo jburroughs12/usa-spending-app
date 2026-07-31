@@ -1,8 +1,8 @@
-/* BBS Federal Spending Search — Black Box Safety Brand */
+/* Federal Spending Search */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
 
 :root {
-  /* BBS Brand Colors */
+    /* Theme colors */
   --bbs-black: #000000;
   --bbs-blue: #051c2c;
   --bbs-olive: #b19800;
