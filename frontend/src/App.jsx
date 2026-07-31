@@ -55,8 +55,8 @@ export default function App() {
       <header>
         <div className="header-row">
           <div>
-            <h1>BLACK <span>BOX</span> SAFETY — Federal Spending</h1>
-            <p className="subtitle">Service-Disabled Veteran-Owned Small Business | Federal Contract Intelligence</p>
+            <h1>Federal <span>Spending</span> Search</h1>
+            <p className="subtitle">Federal Contract Search &amp; Intelligence</p>
           </div>
           <div className="tabs">
             <button
@@ -112,8 +112,8 @@ export default function App() {
 
               {results === null && !loading && (
                 <div className="placeholder">
-                  <p>Select filters and click <strong>Search</strong> to find federal contracts in BBS product categories.</p>
-                  <p>All results are pre-filtered to BBS's target agencies and product codes (PSCs).</p>
+                  <p>Select filters and click <strong>Search</strong> to find federal contract awards.</p>
+                  <p>Leave filters blank to search across all agencies and product/service codes, or narrow by agency, PSC code, vendor, or set-aside type.</p>
                 </div>
               )}
             </>
