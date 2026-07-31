@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Query
 
 from ..client import USASpendingClient
-from ..config import DEFAULT_NAICS_CODES, SET_ASIDE_RECIPIENT_TYPES
-from ..reseller_match import match_competitor
+from ..config import DEFAULT_NAICS_CODES
+from ..reseller_match import match_competitor, normalize_set_aside
 
 router = APIRouter()
 client = USASpendingClient()
@@ -35,7 +35,15 @@ def search_awards(
     agency_names = [a.strip() for a in agency.split(",")] if agency else None
     psc_codes = [p.strip() for p in psc.split(",")] if psc else None
     naics_codes = [n.strip() for n in naics.split(",")] if naics else DEFAULT_NAICS_CODES
-    set_aside_types = SET_ASIDE_RECIPIENT_TYPES.get(set_aside.upper()) if set_aside else None
+    set_aside_code = set_aside.upper() if set_aside else None
+
+    # USASpending's "recipient_type_names" filter matches the *recipient's*
+    # self-reported SAM.gov business classification, not the set-aside that
+    # was actually used to compete this specific award — those can and often
+    # do disagree (or the recipient field is unpopulated), so filtering on it
+    # silently produced zero results. Instead we over-fetch and filter on the
+    # award-level "Type of Set Aside" field, same as the expiration filter.
+    fetch_limit = min(limit * 5, 100) if set_aside_code else limit
 
     data = client.search_awards(
         psc_codes=psc_codes,
@@ -44,14 +52,16 @@ def search_awards(
         recipient_text=recipient or None,
         start_date=start_date,
         end_date=end_date,
-        set_aside_types=set_aside_types,
-        limit=limit,
+        limit=fetch_limit,
         page=page,
         sort=sort,
         order=order,
     )
 
     results = data.get("results", [])
+
+    if set_aside_code:
+        results = [r for r in results if normalize_set_aside(r.get("Type of Set Aside")) == set_aside_code]
 
     # Expiration-range filter: applied to the fetched page, since USASpending's
     # search API doesn't support filtering by period-of-performance end date
@@ -76,6 +86,9 @@ def search_awards(
             return True
 
         results = [r for r in results if _in_range(r)]
+
+    if set_aside_code:
+        results = results[:limit]
 
     for row in results:
         row["reseller_partner_match"] = match_competitor(row.get("Recipient Name"))
