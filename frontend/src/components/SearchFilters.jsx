@@ -4,7 +4,7 @@ import { getReferenceData } from '../api/client';
 export default function SearchFilters({ onSearch, loading }) {
   const [refData, setRefData] = useState(null);
   const [agency, setAgency] = useState('');
-  const [pscCategory, setPscCategory] = useState('');
+  const [psc, setPsc] = useState('');
   const [recipient, setRecipient] = useState('');
   const [setAside, setSetAside] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -16,15 +16,12 @@ export default function SearchFilters({ onSearch, loading }) {
 
   function handleSubmit(e) {
     e.preventDefault();
-    const pscCodes = pscCategory && refData
-      ? refData.psc_categories.find(c => c.category === pscCategory)?.codes.map(c => c.code).join(',')
-      : '';
-    onSearch({ agency, psc: pscCodes, recipient, setAside, startDate, endDate });
+    onSearch({ agency, psc, recipient, setAside, startDate, endDate });
   }
 
   function handleReset() {
     setAgency('');
-    setPscCategory('');
+    setPsc('');
     setRecipient('');
     setSetAside('');
     setStartDate('');
@@ -39,23 +36,23 @@ export default function SearchFilters({ onSearch, loading }) {
       <label>
         Agency
         <select value={agency} onChange={e => setAgency(e.target.value)}>
-          <option value="">All BBS Target Agencies</option>
+          <option value="">All Agencies</option>
           {refData?.agencies.map(a => (
-            <option key={a.code} value={a.code}>{a.code} — {a.name}</option>
+            <option key={a.name} value={a.name}>
+              {a.abbreviation ? `${a.abbreviation} — ${a.name}` : a.name}
+            </option>
           ))}
         </select>
       </label>
 
       <label>
-        Product Category
-        <select value={pscCategory} onChange={e => setPscCategory(e.target.value)}>
-          <option value="">All BBS Product Categories</option>
-          {refData?.psc_categories.map(c => (
-            <option key={c.category} value={c.category}>
-              {c.category} ({c.codes.map(x => x.code).join(', ')})
-            </option>
-          ))}
-        </select>
+        Product/Service Code (PSC)
+        <input
+          type="text"
+          value={psc}
+          onChange={e => setPsc(e.target.value)}
+          placeholder="e.g. 6515, 8415 (blank = all)"
+        />
       </label>
 
       <label>
@@ -64,7 +61,7 @@ export default function SearchFilters({ onSearch, loading }) {
           type="text"
           value={recipient}
           onChange={e => setRecipient(e.target.value)}
-          placeholder="e.g. Grainger, Bound Tree..."
+          placeholder="e.g. Acme Corp"
         />
       </label>
 
