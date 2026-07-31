@@ -8,7 +8,9 @@ import time
 import requests
 
 SAM_BASE_URL = "https://api.sam.gov/contract-awards/v1/search"
+SAM_OPPORTUNITIES_URL = "https://api.sam.gov/opportunities/v2/search"
 CACHE_TTL = 3600  # 1 hour
+OPPORTUNITIES_CACHE_TTL = 86400  # 24 hours — solicitations only need a daily refresh
 MAX_CACHE_SIZE = 500
 
 _cache: dict[str, tuple[float, dict]] = {}
@@ -19,10 +21,10 @@ def _cache_key(params: dict) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
-def _get_cached(key: str) -> dict | None:
+def _get_cached(key: str, ttl: int = CACHE_TTL) -> dict | None:
     if key in _cache:
         ts, data = _cache[key]
-        if time.time() - ts < CACHE_TTL:
+        if time.time() - ts < ttl:
             return data
         del _cache[key]
     return None
@@ -54,6 +56,27 @@ class SAMClient:
 
         query = {**params, "api_key": self.api_key}
         r = self.session.get(SAM_BASE_URL, params=query, timeout=20)
+        if r.status_code == 429:
+            raise RuntimeError("SAM.gov rate limit reached. Try again later.")
+        r.raise_for_status()
+        data = r.json()
+        _set_cache(key, data)
+        return data
+
+    def search_opportunities(self, posted_from: str, posted_to: str, limit: int = 100, offset: int = 0) -> dict:
+        """Fetch federal solicitations posted in a date range (MM/dd/yyyy).
+
+        Cached for 24h since solicitation listings only need a daily refresh —
+        keeps this well under SAM.gov's strict per-key rate limit.
+        """
+        params = {"postedFrom": posted_from, "postedTo": posted_to, "limit": limit, "offset": offset}
+        key = _cache_key({"opportunities": params})
+        cached = _get_cached(key, ttl=OPPORTUNITIES_CACHE_TTL)
+        if cached is not None:
+            return cached
+
+        query = {**params, "api_key": self.api_key}
+        r = self.session.get(SAM_OPPORTUNITIES_URL, params=query, timeout=30)
         if r.status_code == 429:
             raise RuntimeError("SAM.gov rate limit reached. Try again later.")
         r.raise_for_status()
