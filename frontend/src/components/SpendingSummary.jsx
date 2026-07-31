@@ -37,7 +37,7 @@ export default function SpendingSummary({ filters }) {
   return (
     <div className="summary-cards">
       <div className="card total">
-        <div className="card-label">Total BBS-Market Spending (Current FY)</div>
+        <div className="card-label">Total Spending (Current FY)</div>
         <div className="card-value">{formatDollars(totalSpend)}</div>
       </div>
 
