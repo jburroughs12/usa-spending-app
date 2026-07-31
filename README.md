@@ -1,2 +1,2 @@
 # usa-spending-app
-BBS Federal Spending Search — interactive tool for Black Box Safety reps to find relevant federal buying patterns from USASpending.gov
+Federal Spending Search — an interactive tool to explore federal contract award data from USASpending.gov, with optional SAM.gov contracting officer lookup.
