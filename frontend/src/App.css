@@ -204,6 +204,19 @@ aside {
   border-radius: 3px;
 }
 
+.set-aside-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--bbs-black);
+  background: var(--accent);
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
 /* Solicitations */
 .solicitation-list {
   display: flex;
@@ -233,9 +246,26 @@ aside {
   margin-bottom: 4px;
 }
 
+.solicitation-header h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+.solicitation-header h3 a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 .solicitation-meta {
   font-size: 12px;
   color: var(--text-muted);
+}
+
+.solicitation-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .solicitation-header a {
@@ -492,6 +522,18 @@ tr.expiring:hover { background: rgba(212, 160, 23, 0.14); }
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--accent);
+}
+
+.detail-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.detail-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .detail-grid {
