@@ -37,7 +37,7 @@ export async function getReferenceData() {
   return res.json();
 }
 
-export function exportToCsv(data, filename = 'bbs-contracts.csv') {
+export function exportToCsv(data, filename = 'federal-contracts.csv') {
   if (!data || data.length === 0) return;
 
   const columns = [
