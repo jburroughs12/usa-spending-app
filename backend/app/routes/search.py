@@ -14,6 +14,17 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 client = USASpendingClient()
 
+# USASpending's search API has no native way to filter on the award-level
+# "Type of Set Aside" text field (only on the recipient's own business
+# classification, which is a different and unreliably-populated thing — see
+# note below). So a set-aside filter has to scan real pages of results and
+# classify them client-side with normalize_set_aside(). A single page isn't
+# enough: sorted by recency, the most recent activity in a broad NAICS/agency
+# search is often dominated by a handful of high-volume non-set-aside vendors,
+# which can crowd out real matches entirely. Scan several pages instead.
+SET_ASIDE_SCAN_PAGE_SIZE = 100
+SET_ASIDE_SCAN_PAGES_PER_REQUEST = 5
+
 
 @router.get("/api/search")
 def search_awards(
@@ -40,35 +51,48 @@ def search_awards(
     naics_codes = [n.strip() for n in naics.split(",")] if naics else DEFAULT_NAICS_CODES
     set_aside_code = set_aside.upper() if set_aside else None
 
-    # USASpending's "recipient_type_names" filter matches the *recipient's*
-    # self-reported SAM.gov business classification, not the set-aside that
-    # was actually used to compete this specific award — those can and often
-    # do disagree (or the recipient field is unpopulated), so filtering on it
-    # silently produced zero results. Instead we over-fetch and filter on the
-    # award-level "Type of Set Aside" field, same as the expiration filter.
-    fetch_limit = min(limit * 3, 75) if set_aside_code else limit
-
-    try:
-        data = client.search_awards(
-            psc_codes=psc_codes,
-            naics_codes=naics_codes,
-            agencies=agency_names,
-            recipient_text=recipient or None,
-            start_date=start_date,
-            end_date=end_date,
-            limit=fetch_limit,
-            page=page,
-            sort=sort,
-            order=order,
-        )
-    except Exception as e:
-        logger.exception("USASpending search failed")
-        raise HTTPException(status_code=502, detail=f"USASpending.gov API is temporarily unavailable: {e}")
-
-    results = data.get("results", [])
+    def _fetch_page(fetch_page: int, fetch_limit: int) -> dict:
+        try:
+            return client.search_awards(
+                psc_codes=psc_codes,
+                naics_codes=naics_codes,
+                agencies=agency_names,
+                recipient_text=recipient or None,
+                start_date=start_date,
+                end_date=end_date,
+                limit=fetch_limit,
+                page=fetch_page,
+                sort=sort,
+                order=order,
+            )
+        except Exception as e:
+            logger.exception("USASpending search failed")
+            raise HTTPException(status_code=502, detail=f"USASpending.gov API is temporarily unavailable: {e}")
 
     if set_aside_code:
-        results = [r for r in results if normalize_set_aside(r.get("Type of Set Aside")) == set_aside_code]
+        # Recipient's own SAM.gov business classification (USASpending's
+        # "recipient_type_names" filter) isn't the same thing as the set-aside
+        # actually used to compete THIS award, and is unreliably populated —
+        # that mismatch is why this filter used to silently return nothing.
+        # Scan several pages of real results and classify each award's own
+        # "Type of Set Aside" field instead.
+        results = []
+        has_next = False
+        start_page = (page - 1) * SET_ASIDE_SCAN_PAGES_PER_REQUEST + 1
+        for underlying_page in range(start_page, start_page + SET_ASIDE_SCAN_PAGES_PER_REQUEST):
+            data = _fetch_page(underlying_page, SET_ASIDE_SCAN_PAGE_SIZE)
+            page_rows = data.get("results", [])
+            results.extend(
+                r for r in page_rows if normalize_set_aside(r.get("Type of Set Aside")) == set_aside_code
+            )
+            if not data.get("page_metadata", {}).get("hasNext", False):
+                has_next = False
+                break
+            has_next = True
+    else:
+        data = _fetch_page(page, limit)
+        results = data.get("results", [])
+        has_next = data.get("page_metadata", {}).get("hasNext", False)
 
     # Expiration-range filter: applied to the fetched page, since USASpending's
     # search API doesn't support filtering by period-of-performance end date
@@ -99,9 +123,6 @@ def search_awards(
 
     for row in results:
         row["reseller_partner_match"] = match_competitor(row.get("Recipient Name"))
-
-    page_meta = data.get("page_metadata", {})
-    has_next = page_meta.get("hasNext", False)
 
     return {
         "results": results,
