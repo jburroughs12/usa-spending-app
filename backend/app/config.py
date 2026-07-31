@@ -8,14 +8,6 @@ SET_ASIDE_TYPES = [
     {"code": "SB", "name": "Small Business"},
 ]
 
-SET_ASIDE_RECIPIENT_TYPES = {
-    "SDVOSB": ["service_disabled_veterans_owned_business"],
-    "8A": ["8a_program_participant"],
-    "WOSB": ["women_owned_small_business"],
-    "HUBZONE": ["historically_underutilized_business_zone"],
-    "SB": ["small_business", "other_than_small_business"],
-}
-
 # Default NAICS codes relevant to MRO/industrial distribution and safety/PPE product lines
 NAICS_DESCRIPTIONS = {
     "423840": "Industrial Supplies Merchant Wholesalers",
