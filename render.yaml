@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: bbs-spending-search
+    name: federal-spending-search
     runtime: python
     plan: free
     buildCommand: bash build.sh
