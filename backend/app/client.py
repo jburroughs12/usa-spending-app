@@ -124,7 +124,6 @@ class USASpendingClient:
         recipient_text: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
-        set_aside_types: list[str] | None = None,
         limit: int = 100,
         page: int = 1,
         sort: str = "Award Amount",
@@ -154,8 +153,6 @@ class USASpendingClient:
             ]
         if recipient_text:
             filters["recipient_search_text"] = [recipient_text]
-        if set_aside_types:
-            filters["recipient_type_names"] = set_aside_types
 
         payload = {
             "filters": filters,
