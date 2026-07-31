@@ -42,7 +42,7 @@ class SAMClient:
         self.api_key = os.environ.get("SAM_API_KEY", "")
         self.session = requests.Session()
         self.session.headers.update({
-            "User-Agent": "BBS-SpendingSearch/1.0",
+            "User-Agent": "FederalSpendingSearch/1.0",
             "Accept": "application/json",
         })
 
