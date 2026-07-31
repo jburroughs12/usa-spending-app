@@ -22,22 +22,28 @@ export default function SolicitationResults({ data, loading, error }) {
         <div key={s.notice_id} className="solicitation-card">
           <div className="solicitation-header">
             <div>
-              <h3>{s.title}</h3>
+              <h3>
+                {s.sam_url ? (
+                  <a href={s.sam_url} target="_blank" rel="noreferrer">{s.title}</a>
+                ) : s.title}
+              </h3>
               <div className="solicitation-meta">
                 {s.agency || 'Unknown agency'} · NAICS {s.naics_code || '—'} · PSC {s.psc_code || '—'}
               </div>
             </div>
-            {s.sam_url && (
-              <a className="secondary" href={s.sam_url} target="_blank" rel="noreferrer">
-                View on SAM.gov
-              </a>
-            )}
+            <div className="solicitation-header-right">
+              {s.set_aside && <span className="set-aside-badge">{s.set_aside}</span>}
+              {s.sam_url && (
+                <a className="secondary" href={s.sam_url} target="_blank" rel="noreferrer">
+                  View on SAM.gov
+                </a>
+              )}
+            </div>
           </div>
 
           <div className="solicitation-details">
             <span><strong>Posted:</strong> {formatDate(s.posted_date)}</span>
             <span><strong>Response Due:</strong> {formatDate(s.response_deadline)}</span>
-            <span><strong>Set-Aside:</strong> {s.set_aside || '—'}</span>
             {s.point_of_contact && <span><strong>Contact:</strong> {s.point_of_contact}</span>}
           </div>
 
