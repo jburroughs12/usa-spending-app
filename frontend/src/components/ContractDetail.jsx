@@ -213,7 +213,7 @@ export default function ContractDetail({ award, onClose }) {
           <h4>Competition</h4>
           <dl>
             <dt>Set-Aside</dt>
-            <dd>{data.set_aside_type || '—'}</dd>
+            <dd>{data.set_aside_type || 'Full/Open'}</dd>
             <dt>Extent Competed</dt>
             <dd>{data.extent_competed || '—'}</dd>
             <dt>Solicitation Procedures</dt>
