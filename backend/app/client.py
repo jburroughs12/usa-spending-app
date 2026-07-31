@@ -78,6 +78,23 @@ class USASpendingClient:
         _set_cache(key, data)
         return data
 
+    def _get(self, endpoint: str) -> dict:
+        key = _cache_key(endpoint, {})
+        cached = _get_cached(key)
+        if cached is not None:
+            return cached
+
+        url = f"{BASE_URL}{endpoint}"
+        r = self.session.get(url, timeout=45)
+        r.raise_for_status()
+        data = r.json()
+        _set_cache(key, data)
+        return data
+
+    def get_award(self, award_id: str) -> dict:
+        """Fetch full award detail via GET /awards/<id>/. No API key or rate limit."""
+        return self._get(f"/awards/{award_id}/")
+
     def search_awards(
         self,
         psc_codes: list[str] | None = None,

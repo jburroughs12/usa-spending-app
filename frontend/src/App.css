@@ -430,6 +430,12 @@ tr.expiring:hover { background: rgba(212, 160, 23, 0.14); }
   word-break: break-all;
 }
 
+.detail-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
 /* Clickable rows */
 tr.clickable { cursor: pointer; }
 tr.clickable:hover { background: var(--accent-subtle); }

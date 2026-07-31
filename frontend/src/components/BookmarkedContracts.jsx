@@ -65,7 +65,7 @@ export default function BookmarkedContracts({ bookmarks, onToggleBookmark, onCle
                     'clickable',
                     selectedPiid === row['Award ID'] ? 'selected' : '',
                   ].filter(Boolean).join(' ')}
-                  onClick={() => onSelectContract?.(row['Award ID'])}
+                  onClick={() => onSelectContract?.(row)}
                 >
                   <td>
                     <button

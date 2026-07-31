@@ -16,8 +16,13 @@ export default function App() {
   const [filters, setFilters] = useState({});
   const [error, setError] = useState(null);
   const [tab, setTab] = useState('search');
-  const [selectedPiid, setSelectedPiid] = useState(null);
+  const [selectedAward, setSelectedAward] = useState(null);
+  const selectedPiid = selectedAward?.['Award ID'] ?? null;
   const { bookmarks, toggle, isBookmarked, clear } = useBookmarks();
+
+  function selectContract(row) {
+    setSelectedAward(prev => (prev && prev['Award ID'] === row['Award ID'] ? null : row));
+  }
 
   const doSearch = useCallback(async (params, pg = 1) => {
     setLoading(true);
@@ -84,10 +89,11 @@ export default function App() {
 
               {error && <div className="error">{error}</div>}
 
-              {selectedPiid && (
+              {selectedAward && (
                 <ContractDetail
-                  piid={selectedPiid}
-                  onClose={() => setSelectedPiid(null)}
+                  key={selectedAward['Award ID']}
+                  award={selectedAward}
+                  onClose={() => setSelectedAward(null)}
                 />
               )}
 
@@ -100,7 +106,7 @@ export default function App() {
                   onToggleBookmark={toggle}
                   isBookmarked={isBookmarked}
                   selectedPiid={selectedPiid}
-                  onSelectContract={(piid) => setSelectedPiid(piid === selectedPiid ? null : piid)}
+                  onSelectContract={selectContract}
                 />
               )}
 
@@ -115,10 +121,11 @@ export default function App() {
 
           {tab === 'bookmarks' && (
             <>
-              {selectedPiid && (
+              {selectedAward && (
                 <ContractDetail
-                  piid={selectedPiid}
-                  onClose={() => setSelectedPiid(null)}
+                  key={selectedAward['Award ID']}
+                  award={selectedAward}
+                  onClose={() => setSelectedAward(null)}
                 />
               )}
               <BookmarkedContracts
@@ -126,7 +133,7 @@ export default function App() {
                 onToggleBookmark={toggle}
                 onClear={clear}
                 selectedPiid={selectedPiid}
-                onSelectContract={(piid) => setSelectedPiid(piid === selectedPiid ? null : piid)}
+                onSelectContract={selectContract}
               />
             </>
           )}

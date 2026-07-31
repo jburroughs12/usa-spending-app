@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getContractDetail } from '../api/client';
+import { getAwardDetail, getContractingOfficer } from '../api/client';
 
 function formatDollars(amount) {
   if (amount == null) return 'N/A';
@@ -8,16 +8,29 @@ function formatDollars(amount) {
   return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-export default function ContractDetail({ piid, onClose }) {
+export default function ContractDetail({ award, onClose }) {
+  const piid = award?.['Award ID'];
+  const internalId = award?.internal_id;
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [co, setCo] = useState(null);
+  const [coLoading, setCoLoading] = useState(false);
+  const [coError, setCoError] = useState(null);
+  const [coRequested, setCoRequested] = useState(false);
+
   useEffect(() => {
-    if (!piid) return;
+    if (!internalId) {
+      setLoading(false);
+      setError('No USASpending.gov record id available for this contract.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
-    getContractDetail(piid)
+    getAwardDetail(internalId)
       .then(d => {
         setData(d);
         setLoading(false);
@@ -26,7 +39,23 @@ export default function ContractDetail({ piid, onClose }) {
         setError(err.message);
         setLoading(false);
       });
-  }, [piid]);
+  }, [internalId]);
+
+  function lookupContractingOfficer() {
+    if (!piid) return;
+    setCoRequested(true);
+    setCoLoading(true);
+    setCoError(null);
+    getContractingOfficer(piid)
+      .then(d => {
+        setCo(d);
+        setCoLoading(false);
+      })
+      .catch(err => {
+        setCoError(err.message);
+        setCoLoading(false);
+      });
+  }
 
   if (loading) {
     return (
@@ -35,7 +64,7 @@ export default function ContractDetail({ piid, onClose }) {
           <h3>Contract Detail</h3>
           <button className="secondary" onClick={onClose}>Close</button>
         </div>
-        <div className="detail-loading">Loading SAM.gov data...</div>
+        <div className="detail-loading">Loading USASpending.gov data...</div>
       </div>
     );
   }
@@ -59,7 +88,7 @@ export default function ContractDetail({ piid, onClose }) {
           <h3>Contract Detail</h3>
           <button className="secondary" onClick={onClose}>Close</button>
         </div>
-        <div className="detail-empty">No SAM.gov record found for {piid}</div>
+        <div className="detail-empty">No USASpending.gov record found for {piid}</div>
       </div>
     );
   }
@@ -76,52 +105,65 @@ export default function ContractDetail({ piid, onClose }) {
           <h4>Contracting Office</h4>
           <dl>
             <dt>Department</dt>
-            <dd>{data.department_name || '\u2014'}</dd>
+            <dd>{data.department_name || '—'}</dd>
             <dt>Sub-Tier Agency</dt>
-            <dd>{data.subtier_name || '\u2014'}</dd>
+            <dd>{data.subtier_name || '—'}</dd>
             <dt>Office</dt>
-            <dd>{data.office_name || '\u2014'}</dd>
-            <dt>Office Code</dt>
-            <dd>{data.office_code || '\u2014'}</dd>
+            <dd>{data.office_name || '—'}</dd>
           </dl>
         </section>
 
         <section className="detail-section">
           <h4>Contracting Personnel</h4>
-          <dl>
-            <dt>Created By</dt>
-            <dd className="co-email">{data.created_by || '\u2014'}</dd>
-            <dt>Approved By</dt>
-            <dd className="co-email">{data.approved_by || '\u2014'}</dd>
-            {data.last_modified_by && data.last_modified_by !== data.approved_by && <>
-              <dt>Last Modified By</dt>
-              <dd className="co-email">{data.last_modified_by}</dd>
-            </>}
-          </dl>
+          {!coRequested && (
+            <>
+              <p className="detail-hint">
+                Contracting officer contact comes from SAM.gov, which has a strict rate limit. Look it up only when you need it.
+              </p>
+              <button className="secondary" onClick={lookupContractingOfficer}>
+                Look up contracting officer (SAM.gov)
+              </button>
+            </>
+          )}
+          {coLoading && <div className="detail-loading">Looking up SAM.gov data...</div>}
+          {coError && (
+            <div className="error">
+              {coError}
+              <div>
+                <button className="secondary" onClick={lookupContractingOfficer}>Retry</button>
+              </div>
+            </div>
+          )}
+          {co && (
+            <dl>
+              <dt>Created By</dt>
+              <dd className="co-email">{co.created_by || '—'}</dd>
+              <dt>Approved By</dt>
+              <dd className="co-email">{co.approved_by || '—'}</dd>
+              {co.last_modified_by && co.last_modified_by !== co.approved_by && <>
+                <dt>Last Modified By</dt>
+                <dd className="co-email">{co.last_modified_by}</dd>
+              </>}
+            </dl>
+          )}
         </section>
 
         <section className="detail-section">
           <h4>Awardee</h4>
           <dl>
             <dt>Name</dt>
-            <dd>{data.awardee_name || '\u2014'}</dd>
+            <dd>{data.awardee_name || '—'}</dd>
             {data.awardee_parent_name && data.awardee_parent_name !== data.awardee_name && <>
               <dt>Parent</dt>
               <dd>{data.awardee_parent_name}</dd>
             </>}
             <dt>UEI</dt>
-            <dd>{data.awardee_uei || '\u2014'}</dd>
-            <dt>CAGE</dt>
-            <dd>{data.awardee_cage || '\u2014'}</dd>
+            <dd>{data.awardee_uei || '—'}</dd>
             <dt>Address</dt>
             <dd>
               {[data.awardee_address, data.awardee_city, data.awardee_state, data.awardee_zip]
-                .filter(Boolean).join(', ') || '\u2014'}
+                .filter(Boolean).join(', ') || '—'}
             </dd>
-            {data.awardee_phone && <>
-              <dt>Phone</dt>
-              <dd>{data.awardee_phone}</dd>
-            </>}
           </dl>
         </section>
 
@@ -132,10 +174,6 @@ export default function ContractDetail({ piid, onClose }) {
             <dd className="amount">{formatDollars(data.action_obligation)}</dd>
             <dt>Base & Options Value</dt>
             <dd className="amount">{formatDollars(data.base_and_options_value)}</dd>
-            <dt>Total Obligation</dt>
-            <dd className="amount">{formatDollars(data.total_obligation)}</dd>
-            <dt>Total Base & Options</dt>
-            <dd className="amount">{formatDollars(data.total_base_and_options)}</dd>
           </dl>
         </section>
 
@@ -143,9 +181,9 @@ export default function ContractDetail({ piid, onClose }) {
           <h4>Product / Service</h4>
           <dl>
             <dt>PSC</dt>
-            <dd>{data.psc_code ? `${data.psc_code} \u2014 ${data.psc_description || ''}` : '\u2014'}</dd>
+            <dd>{data.psc_code ? `${data.psc_code} — ${data.psc_description || ''}` : '—'}</dd>
             <dt>NAICS</dt>
-            <dd>{data.naics_code ? `${data.naics_code} \u2014 ${data.naics_description || ''}` : '\u2014'}</dd>
+            <dd>{data.naics_code ? `${data.naics_code} — ${data.naics_description || ''}` : '—'}</dd>
             {data.description && <>
               <dt>Description</dt>
               <dd>{data.description}</dd>
@@ -157,11 +195,11 @@ export default function ContractDetail({ piid, onClose }) {
           <h4>Competition</h4>
           <dl>
             <dt>Set-Aside</dt>
-            <dd>{data.set_aside_type || '\u2014'}</dd>
+            <dd>{data.set_aside_type || '—'}</dd>
             <dt>Extent Competed</dt>
-            <dd>{data.extent_competed || '\u2014'}</dd>
+            <dd>{data.extent_competed || '—'}</dd>
             <dt>Solicitation Procedures</dt>
-            <dd>{data.solicitation_procedures || '\u2014'}</dd>
+            <dd>{data.solicitation_procedures || '—'}</dd>
           </dl>
         </section>
 
@@ -169,11 +207,11 @@ export default function ContractDetail({ piid, onClose }) {
           <h4>Dates</h4>
           <dl>
             <dt>Signed</dt>
-            <dd>{data.signed_date || '\u2014'}</dd>
+            <dd>{data.signed_date || '—'}</dd>
             <dt>Period of Performance</dt>
-            <dd>{data.effective_date || '\u2014'}</dd>
+            <dd>{data.effective_date || '—'}</dd>
             <dt>Completion</dt>
-            <dd>{data.completion_date || '\u2014'}</dd>
+            <dd>{data.completion_date || '—'}</dd>
           </dl>
         </section>
 

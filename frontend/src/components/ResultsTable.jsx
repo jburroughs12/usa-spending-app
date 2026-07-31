@@ -68,7 +68,7 @@ export default function ResultsTable({ data, hasNext, page, onPageChange, onTogg
                     'clickable',
                     selectedPiid === row['Award ID'] ? 'selected' : '',
                   ].filter(Boolean).join(' ')}
-                  onClick={() => onSelectContract?.(row['Award ID'])}
+                  onClick={() => onSelectContract?.(row)}
                 >
                   <td>
                     <button

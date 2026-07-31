@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 _env_path = Path(__file__).resolve().parents[2] / ".env"
 load_dotenv(_env_path)
 
-from .routes import search, spending, reference, contract_detail
+from .routes import search, spending, reference, contract_detail, award_detail
 
 app = FastAPI(title="BBS Spending Search", version="0.1.0")
 
@@ -31,6 +31,7 @@ app.include_router(search.router)
 app.include_router(spending.router)
 app.include_router(reference.router)
 app.include_router(contract_detail.router)
+app.include_router(award_detail.router)
 
 
 @app.get("/api/health")

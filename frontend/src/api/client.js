@@ -69,7 +69,21 @@ export function exportToCsv(data, filename = 'bbs-contracts.csv') {
   URL.revokeObjectURL(url);
 }
 
-export async function getContractDetail(piid) {
+export async function getAwardDetail(internalId) {
+  const res = await fetch(`${BASE}/award-detail?internal_id=${encodeURIComponent(internalId)}`);
+  if (!res.ok) {
+    if (res.status === 404) return null;
+    const body = await res.json().catch(() => null);
+    const detail = body?.detail || `Request failed (${res.status})`;
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
+// On-demand only: looks up the contracting officer via SAM.gov, which has a
+// much stricter rate limit than USASpending.gov. Callers should trigger this
+// explicitly rather than automatically on every contract view.
+export async function getContractingOfficer(piid) {
   const res = await fetch(`${BASE}/contract-detail?piid=${encodeURIComponent(piid)}`);
   if (!res.ok) {
     if (res.status === 404) return null;
