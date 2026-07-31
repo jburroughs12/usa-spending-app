@@ -113,7 +113,7 @@ export default function ContractDetail({ award, onClose }) {
       <div className="detail-header">
         <div className="detail-header-left">
           <h3>Contract Detail — {data.piid}</h3>
-          {data.set_aside_type && <span className="set-aside-badge">{data.set_aside_type}</span>}
+          <span className="set-aside-badge">{data.set_aside_type || 'Full/Open'}</span>
         </div>
         {headerActions}
       </div>
