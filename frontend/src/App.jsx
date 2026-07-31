@@ -1,11 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import SearchFilters from './components/SearchFilters';
 import ResultsTable from './components/ResultsTable';
 import SpendingSummary from './components/SpendingSummary';
 import BookmarkedContracts from './components/BookmarkedContracts';
 import ContractDetail from './components/ContractDetail';
+import SolicitationFilters from './components/SolicitationFilters';
+import SolicitationResults from './components/SolicitationResults';
 import useBookmarks from './hooks/useBookmarks';
-import { searchAwards } from './api/client';
+import { searchAwards, getSolicitations } from './api/client';
 import './App.css';
 
 export default function App() {
@@ -19,6 +21,11 @@ export default function App() {
   const [selectedAward, setSelectedAward] = useState(null);
   const selectedPiid = selectedAward?.['Award ID'] ?? null;
   const { bookmarks, toggle, isBookmarked, clear } = useBookmarks();
+
+  const [solicitations, setSolicitations] = useState(null);
+  const [solicitationsLoading, setSolicitationsLoading] = useState(false);
+  const [solicitationsError, setSolicitationsError] = useState(null);
+  const [solicitationsLoaded, setSolicitationsLoaded] = useState(false);
 
   function selectContract(row) {
     setSelectedAward(prev => (prev && prev['Award ID'] === row['Award ID'] ? null : row));
@@ -50,6 +57,27 @@ export default function App() {
     doSearch(filters, newPage);
   }
 
+  const doSolicitationsSearch = useCallback(async (params) => {
+    setSolicitationsLoading(true);
+    setSolicitationsError(null);
+    try {
+      const data = await getSolicitations({ activeOnly: true, ...params, limit: 50 });
+      setSolicitations(data.results);
+    } catch (err) {
+      setSolicitationsError(err.message);
+      setSolicitations(null);
+    } finally {
+      setSolicitationsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (tab === 'solicitations' && !solicitationsLoaded) {
+      setSolicitationsLoaded(true);
+      doSolicitationsSearch({});
+    }
+  }, [tab, solicitationsLoaded, doSolicitationsSearch]);
+
   return (
     <div className="app">
       <header>
@@ -63,7 +91,13 @@ export default function App() {
               className={`tab ${tab === 'search' ? 'active' : ''}`}
               onClick={() => setTab('search')}
             >
-              Search
+              Awarded Contracts
+            </button>
+            <button
+              className={`tab ${tab === 'solicitations' ? 'active' : ''}`}
+              onClick={() => setTab('solicitations')}
+            >
+              Solicitations
             </button>
             <button
               className={`tab ${tab === 'bookmarks' ? 'active' : ''}`}
@@ -79,6 +113,12 @@ export default function App() {
         {tab === 'search' && (
           <aside>
             <SearchFilters onSearch={handleSearch} loading={loading} />
+          </aside>
+        )}
+
+        {tab === 'solicitations' && (
+          <aside>
+            <SolicitationFilters onSearch={doSolicitationsSearch} loading={solicitationsLoading} />
           </aside>
         )}
 
@@ -113,10 +153,18 @@ export default function App() {
               {results === null && !loading && (
                 <div className="placeholder">
                   <p>Select filters and click <strong>Search</strong> to find federal contract awards.</p>
-                  <p>Leave filters blank to search across all agencies and product/service codes, or narrow by agency, PSC code, vendor, or set-aside type.</p>
+                  <p>Leave filters blank to search across all agencies and product/service codes, or narrow by agency, PSC code, vendor, set-aside type, or upcoming expiration window.</p>
                 </div>
               )}
             </>
+          )}
+
+          {tab === 'solicitations' && (
+            <SolicitationResults
+              data={solicitations}
+              loading={solicitationsLoading}
+              error={solicitationsError}
+            />
           )}
 
           {tab === 'bookmarks' && (
