@@ -2,7 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
 
 :root {
-    /* Theme colors */
+  /* Theme colors */
   --bbs-black: #000000;
   --bbs-blue: #051c2c;
   --bbs-olive: #b19800;
@@ -146,6 +146,131 @@ aside {
   display: flex;
   gap: 8px;
   margin-top: 16px;
+}
+
+.filter-hint {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-muted);
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+.naics-checklist {
+  max-height: 160px;
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 16px;
+}
+
+.naics-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text);
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+.naics-checkbox:last-child { margin-bottom: 0; }
+.naics-checkbox input { margin-top: 2px; }
+
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+.checkbox-label input { width: auto; }
+
+.partner-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 6px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--bbs-black);
+  background: var(--accent);
+  border-radius: 3px;
+}
+
+/* Solicitations */
+.solicitation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.solicitation-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 14px 16px;
+}
+
+.solicitation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.solicitation-header h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.solicitation-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.solicitation-header a {
+  padding: 6px 12px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.solicitation-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.solicitation-details strong { color: var(--text); font-weight: 600; }
+
+.reseller-recommendations {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.reseller-recommendations strong { color: var(--text); margin-right: 8px; }
+
+.reseller-chip {
+  display: inline-block;
+  margin: 4px 6px 0 0;
+  padding: 2px 8px;
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
 }
 
 button {
