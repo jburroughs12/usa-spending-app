@@ -1,12 +1,15 @@
 """Award search endpoint."""
 
+import logging
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 
 from ..client import USASpendingClient
 from ..config import DEFAULT_NAICS_CODES
 from ..reseller_match import match_competitor, normalize_set_aside
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 client = USASpendingClient()
@@ -43,20 +46,24 @@ def search_awards(
     # do disagree (or the recipient field is unpopulated), so filtering on it
     # silently produced zero results. Instead we over-fetch and filter on the
     # award-level "Type of Set Aside" field, same as the expiration filter.
-    fetch_limit = min(limit * 5, 100) if set_aside_code else limit
+    fetch_limit = min(limit * 3, 75) if set_aside_code else limit
 
-    data = client.search_awards(
-        psc_codes=psc_codes,
-        naics_codes=naics_codes,
-        agencies=agency_names,
-        recipient_text=recipient or None,
-        start_date=start_date,
-        end_date=end_date,
-        limit=fetch_limit,
-        page=page,
-        sort=sort,
-        order=order,
-    )
+    try:
+        data = client.search_awards(
+            psc_codes=psc_codes,
+            naics_codes=naics_codes,
+            agencies=agency_names,
+            recipient_text=recipient or None,
+            start_date=start_date,
+            end_date=end_date,
+            limit=fetch_limit,
+            page=page,
+            sort=sort,
+            order=order,
+        )
+    except Exception as e:
+        logger.exception("USASpending search failed")
+        raise HTTPException(status_code=502, detail=f"USASpending.gov API is temporarily unavailable: {e}")
 
     results = data.get("results", [])
 
