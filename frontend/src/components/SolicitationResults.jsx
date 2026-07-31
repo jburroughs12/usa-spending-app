@@ -32,7 +32,7 @@ export default function SolicitationResults({ data, loading, error }) {
               </div>
             </div>
             <div className="solicitation-header-right">
-              {s.set_aside && <span className="set-aside-badge">{s.set_aside}</span>}
+              <span className="set-aside-badge">{s.set_aside || 'Full/Open'}</span>
               {s.sam_url && (
                 <a className="secondary" href={s.sam_url} target="_blank" rel="noreferrer">
                   View on SAM.gov
