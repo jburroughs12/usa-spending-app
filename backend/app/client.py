@@ -62,7 +62,7 @@ class USASpendingClient:
         self.session = requests.Session()
         self.session.headers.update({
             "Content-Type": "application/json",
-            "User-Agent": "BBS-SpendingSearch/1.0",
+            "User-Agent": "FederalSpendingSearch/1.0",
         })
 
     def _post(self, endpoint: str, payload: dict) -> dict:
@@ -94,6 +94,10 @@ class USASpendingClient:
     def get_award(self, award_id: str) -> dict:
         """Fetch full award detail via GET /awards/<id>/. No API key or rate limit."""
         return self._get(f"/awards/{award_id}/")
+
+    def get_toptier_agencies(self) -> dict:
+        """Fetch all federal top-tier agencies. No API key or rate limit."""
+        return self._get("/references/toptier_agencies/")
 
     def search_awards(
         self,
