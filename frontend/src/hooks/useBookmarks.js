@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-const STORAGE_KEY = 'bbs-bookmarked-contracts';
+const STORAGE_KEY = 'bookmarked-contracts';
 
 function load() {
   try {
