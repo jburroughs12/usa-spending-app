@@ -4,7 +4,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-echo "Starting BBS Federal Spending Search..."
+echo "Starting Federal Spending Search..."
 echo ""
 
 # Start backend
