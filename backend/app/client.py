@@ -108,7 +108,7 @@ class USASpendingClient:
                 "time_period": [{"start_date": five_years_ago, "end_date": datetime.today().strftime("%Y-%m-%d")}],
                 "recipient_search_text": [recipient_name],
             },
-            "fields": ["NAICS Code", "Awarding Agency", "Award Amount"],
+            "fields": ["NAICS", "Awarding Agency", "Award Amount"],
             "sort": "Award Amount",
             "order": "desc",
             "limit": limit,
@@ -124,6 +124,7 @@ class USASpendingClient:
         recipient_text: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
+        set_aside_codes: list[str] | None = None,
         limit: int = 100,
         page: int = 1,
         sort: str = "Award Amount",
@@ -153,24 +154,33 @@ class USASpendingClient:
             ]
         if recipient_text:
             filters["recipient_search_text"] = [recipient_text]
+        if set_aside_codes:
+            filters["set_aside_type_codes"] = set_aside_codes
 
         payload = {
             "filters": filters,
+            # "Type of Set Aside" is not a documented field for this endpoint
+            # (only Start Date, End Date, Award Amount, Total Outlays,
+            # Contract Award Type, NAICS, PSC are valid for contracts, per
+            # USASpending's spending_by_award API contract) — the API
+            # silently drops unknown field names rather than erroring, so
+            # requesting it just returns nothing for every row. Set-aside
+            # status is filterable (set_aside_type_codes above) but not
+            # displayable in bulk search results; the per-award detail
+            # endpoint (award_detail.py) is the only place it's available.
             "fields": [
                 "Award ID",
                 "Recipient Name",
                 "Recipient UEI",
                 "Awarding Agency",
                 "Awarding Sub Agency",
-                "Awarding Office Name",
                 "Award Amount",
                 "Description",
                 "Start Date",
                 "End Date",
                 "Contract Award Type",
-                "Type of Set Aside",
                 "Place of Performance State Code",
-                "NAICS Code",
+                "NAICS",
             ],
             "sort": sort,
             "order": order,
