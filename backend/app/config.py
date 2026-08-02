@@ -8,6 +8,17 @@ SET_ASIDE_TYPES = [
     {"code": "SB", "name": "Small Business"},
 ]
 
+# USASpending's native "set_aside_type_codes" filter — these are the actual
+# FPDS "Type of Set Aside" domain codes (set-aside and sole-source variants
+# grouped together per program), not our own display codes above.
+SET_ASIDE_TYPE_CODES = {
+    "SDVOSB": ["SDVOSBC", "SDVOSBS"],
+    "8A": ["8A", "8AN"],
+    "WOSB": ["WOSB", "EDWOSB", "EDWOSBSS"],
+    "HUBZONE": ["HZC", "HZS"],
+    "SB": ["SBA", "SBP"],
+}
+
 # Default NAICS codes relevant to MRO/industrial distribution and safety/PPE product lines
 NAICS_DESCRIPTIONS = {
     "423840": "Industrial Supplies Merchant Wholesalers",
