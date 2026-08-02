@@ -56,7 +56,7 @@ def _get_profile(recipient_name: str) -> dict:
     try:
         data = _client.get_recipient_profile(recipient_name)
         for row in data.get("results", []):
-            naics = row.get("NAICS Code")
+            naics = row.get("NAICS")
             if naics:
                 naics_codes.add(str(naics).strip())
             agency = row.get("Awarding Agency")
