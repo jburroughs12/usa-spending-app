@@ -458,7 +458,6 @@ tr.expiring:hover { background: rgba(212, 160, 23, 0.14); }
   white-space: nowrap;
 }
 .award-id { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; color: var(--text-muted); }
-.set-aside-cell { font-size: 11px; font-style: italic; color: var(--text-muted); white-space: nowrap; }
 .days-warn { color: var(--warn); font-weight: 700; }
 
 .no-results, .placeholder {
