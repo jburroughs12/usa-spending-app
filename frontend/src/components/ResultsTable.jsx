@@ -1,4 +1,6 @@
+import { Fragment } from 'react';
 import { exportToCsv } from '../api/client';
+import ContractDetail from './ContractDetail';
 
 function formatDollars(amount) {
   if (amount == null) return 'N/A';
@@ -17,7 +19,7 @@ function daysUntil(dateStr) {
   return Math.ceil((end - now) / (1000 * 60 * 60 * 24));
 }
 
-export default function ResultsTable({ data, hasNext, page, onPageChange, onToggleBookmark, isBookmarked, selectedPiid, onSelectContract }) {
+export default function ResultsTable({ data, hasNext, page, onPageChange, onToggleBookmark, isBookmarked, selectedPiid, onSelectContract, selectedAward, onCloseDetail }) {
   if (!data) return null;
 
   if (data.length === 0) {
@@ -60,43 +62,52 @@ export default function ResultsTable({ data, hasNext, page, onPageChange, onTogg
               const days = daysUntil(row['End Date']);
               const expiring = days != null && days > 0 && days <= 180;
               const saved = isBookmarked?.(row['Award ID']);
+              const isSelected = selectedPiid != null && selectedPiid === row['Award ID'];
               return (
-                <tr
-                  key={row['Award ID'] || i}
-                  className={[
-                    expiring ? 'expiring' : '',
-                    'clickable',
-                    selectedPiid === row['Award ID'] ? 'selected' : '',
-                  ].filter(Boolean).join(' ')}
-                  onClick={() => onSelectContract?.(row)}
-                >
-                  <td>
-                    <button
-                      className={`bookmark-btn ${saved ? 'bookmarked' : ''}`}
-                      onClick={(e) => { e.stopPropagation(); onToggleBookmark?.(row); }}
-                      title={saved ? 'Remove bookmark' : 'Bookmark this contract'}
-                    >
-                      {saved ? '★' : '☆'}
-                    </button>
-                  </td>
-                  <td className="recipient">
-                    {row['Recipient Name'] || '—'}
-                    {row.reseller_partner_match && (
-                      <span className="partner-badge" title="Grainger reseller partner">Partner</span>
-                    )}
-                  </td>
-                  <td>{row['Awarding Agency'] || '—'}</td>
-                  <td className="office">{row['Awarding Sub Agency'] || '—'}</td>
-                  <td className="amount">{formatDollars(row['Award Amount'])}</td>
-                  <td className="description">{row['Description']?.slice(0, 120) || '—'}</td>
-                  <td>{row['Type of Set Aside'] || 'Full/Open'}</td>
-                  <td>{row['Start Date'] || '—'}</td>
-                  <td>{row['End Date'] || '—'}</td>
-                  <td className={expiring ? 'days-warn' : ''}>
-                    {days != null ? (days > 0 ? days : 'Expired') : '—'}
-                  </td>
-                  <td className="award-id">{row['Award ID'] || '—'}</td>
-                </tr>
+                <Fragment key={row['Award ID'] || i}>
+                  <tr
+                    className={[
+                      expiring ? 'expiring' : '',
+                      'clickable',
+                      isSelected ? 'selected' : '',
+                    ].filter(Boolean).join(' ')}
+                    onClick={() => onSelectContract?.(row)}
+                  >
+                    <td>
+                      <button
+                        className={`bookmark-btn ${saved ? 'bookmarked' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); onToggleBookmark?.(row); }}
+                        title={saved ? 'Remove bookmark' : 'Bookmark this contract'}
+                      >
+                        {saved ? '★' : '☆'}
+                      </button>
+                    </td>
+                    <td className="recipient">
+                      {row['Recipient Name'] || '—'}
+                      {row.reseller_partner_match && (
+                        <span className="partner-badge" title="Grainger reseller partner">Partner</span>
+                      )}
+                    </td>
+                    <td>{row['Awarding Agency'] || '—'}</td>
+                    <td className="office">{row['Awarding Sub Agency'] || '—'}</td>
+                    <td className="amount">{formatDollars(row['Award Amount'])}</td>
+                    <td className="description">{row['Description']?.slice(0, 120) || '—'}</td>
+                    <td>{row['Type of Set Aside'] || 'Full/Open'}</td>
+                    <td>{row['Start Date'] || '—'}</td>
+                    <td>{row['End Date'] || '—'}</td>
+                    <td className={expiring ? 'days-warn' : ''}>
+                      {days != null ? (days > 0 ? days : 'Expired') : '—'}
+                    </td>
+                    <td className="award-id">{row['Award ID'] || '—'}</td>
+                  </tr>
+                  {isSelected && (
+                    <tr className="detail-row">
+                      <td colSpan={11}>
+                        <ContractDetail award={selectedAward} onClose={onCloseDetail} />
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               );
             })}
           </tbody>
