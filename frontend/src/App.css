@@ -446,6 +446,10 @@ tr:hover { background: var(--accent-subtle); }
 tr.expiring { background: rgba(212, 160, 23, 0.08); }
 tr.expiring:hover { background: rgba(212, 160, 23, 0.14); }
 
+tr.detail-row:hover { background: none; }
+tr.detail-row td { padding: 12px; border-bottom: 1px solid var(--border); }
+tr.detail-row .detail-panel { margin-bottom: 0; }
+
 .recipient { font-weight: 600; max-width: 200px; }
 .office { font-size: 12px; max-width: 180px; color: var(--text-muted); }
 .amount { font-weight: 700; white-space: nowrap; color: var(--accent); }
