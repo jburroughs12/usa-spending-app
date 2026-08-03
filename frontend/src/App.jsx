@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import SearchFilters from './components/SearchFilters';
 import ResultsTable from './components/ResultsTable';
 import SpendingSummary from './components/SpendingSummary';
@@ -24,6 +24,8 @@ export default function App() {
   const [solicitations, setSolicitations] = useState(null);
   const [solicitationsLoading, setSolicitationsLoading] = useState(false);
   const [solicitationsError, setSolicitationsError] = useState(null);
+  const [solicitationsFetchedAt, setSolicitationsFetchedAt] = useState(null);
+  const [solicitationsLoaded, setSolicitationsLoaded] = useState(false);
 
   function selectContract(row) {
     setSelectedAward(prev => (prev && prev['Award ID'] === row['Award ID'] ? null : row));
@@ -61,6 +63,7 @@ export default function App() {
     try {
       const data = await getSolicitations({ activeOnly: true, ...params, limit: 50 });
       setSolicitations(data.results);
+      setSolicitationsFetchedAt(data.snapshot_fetched_at ?? null);
     } catch (err) {
       setSolicitationsError(err.message);
       setSolicitations(null);
@@ -68,6 +71,15 @@ export default function App() {
       setSolicitationsLoading(false);
     }
   }, []);
+
+  // Solicitations are read from a snapshot refreshed daily by a scheduled
+  // job (not a live SAM.gov call), so it's safe to auto-load on tab visit.
+  useEffect(() => {
+    if (tab === 'solicitations' && !solicitationsLoaded) {
+      setSolicitationsLoaded(true);
+      doSolicitationsSearch({});
+    }
+  }, [tab, solicitationsLoaded, doSolicitationsSearch]);
 
   return (
     <div className="app">
@@ -149,6 +161,7 @@ export default function App() {
               data={solicitations}
               loading={solicitationsLoading}
               error={solicitationsError}
+              fetchedAt={solicitationsFetchedAt}
               onLoad={() => doSolicitationsSearch({})}
             />
           )}
