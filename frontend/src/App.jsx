@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import SearchFilters from './components/SearchFilters';
 import ResultsTable from './components/ResultsTable';
 import SpendingSummary from './components/SpendingSummary';
@@ -24,7 +24,6 @@ export default function App() {
   const [solicitations, setSolicitations] = useState(null);
   const [solicitationsLoading, setSolicitationsLoading] = useState(false);
   const [solicitationsError, setSolicitationsError] = useState(null);
-  const [solicitationsLoaded, setSolicitationsLoaded] = useState(false);
 
   function selectContract(row) {
     setSelectedAward(prev => (prev && prev['Award ID'] === row['Award ID'] ? null : row));
@@ -69,13 +68,6 @@ export default function App() {
       setSolicitationsLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    if (tab === 'solicitations' && !solicitationsLoaded) {
-      setSolicitationsLoaded(true);
-      doSolicitationsSearch({});
-    }
-  }, [tab, solicitationsLoaded, doSolicitationsSearch]);
 
   return (
     <div className="app">
@@ -157,6 +149,7 @@ export default function App() {
               data={solicitations}
               loading={solicitationsLoading}
               error={solicitationsError}
+              onLoad={() => doSolicitationsSearch({})}
             />
           )}
 
