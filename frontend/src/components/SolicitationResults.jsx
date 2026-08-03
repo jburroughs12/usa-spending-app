@@ -3,10 +3,27 @@ function formatDate(dateStr) {
   return dateStr.slice(0, 10);
 }
 
-export default function SolicitationResults({ data, loading, error }) {
-  if (error) return <div className="error">{error}</div>;
+export default function SolicitationResults({ data, loading, error, onLoad }) {
   if (loading) return <div className="summary-loading">Loading solicitations...</div>;
-  if (!data) return null;
+
+  if (error) {
+    return (
+      <div className="error">
+        {error}
+        <div><button className="secondary" onClick={onLoad}>Retry</button></div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="placeholder">
+        <p>SAM.gov's Opportunities API has a strict daily quota — as low as 10 requests/day for individual accounts not tied to a company entity registration — so solicitations aren't fetched automatically.</p>
+        <p>Click below when you're ready to check for new solicitations. Once loaded, results are cached for 24 hours, so revisiting this tab or changing filters won't use up more of the quota.</p>
+        <button onClick={onLoad}>Load Solicitations (SAM.gov)</button>
+      </div>
+    );
+  }
 
   if (data.length === 0) {
     return <div className="no-results">No open solicitations found matching your filters.</div>;
