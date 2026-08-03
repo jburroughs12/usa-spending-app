@@ -401,6 +401,12 @@ main {
   letter-spacing: 0.04em;
 }
 
+.snapshot-note {
+  text-transform: none;
+  letter-spacing: normal;
+  font-style: italic;
+}
+
 .results-actions {
   display: flex;
   align-items: center;
