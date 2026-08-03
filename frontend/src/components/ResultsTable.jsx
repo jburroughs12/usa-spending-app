@@ -48,7 +48,7 @@ export default function ResultsTable({ data, hasNext, page, onPageChange, onTogg
               <th>Sub-Agency</th>
               <th>Amount</th>
               <th>Description</th>
-              <th title="Set-aside status isn't available in bulk search results — click a row to see it in Contract Detail.">Set-Aside</th>
+              <th>Set-Aside</th>
               <th>Start Date</th>
               <th>End Date</th>
               <th>Days Left</th>
@@ -89,9 +89,7 @@ export default function ResultsTable({ data, hasNext, page, onPageChange, onTogg
                   <td className="office">{row['Awarding Sub Agency'] || '—'}</td>
                   <td className="amount">{formatDollars(row['Award Amount'])}</td>
                   <td className="description">{row['Description']?.slice(0, 120) || '—'}</td>
-                  <td className="set-aside-cell" title="Click this row to see set-aside status in Contract Detail">
-                    See detail
-                  </td>
+                  <td>{row['Type of Set Aside'] || 'Full/Open'}</td>
                   <td>{row['Start Date'] || '—'}</td>
                   <td>{row['End Date'] || '—'}</td>
                   <td className={expiring ? 'days-warn' : ''}>
