@@ -3,7 +3,6 @@ import SearchFilters from './components/SearchFilters';
 import ResultsTable from './components/ResultsTable';
 import SpendingSummary from './components/SpendingSummary';
 import BookmarkedContracts from './components/BookmarkedContracts';
-import ContractDetail from './components/ContractDetail';
 import SolicitationFilters from './components/SolicitationFilters';
 import SolicitationResults from './components/SolicitationResults';
 import useBookmarks from './hooks/useBookmarks';
@@ -129,14 +128,6 @@ export default function App() {
 
               {error && <div className="error">{error}</div>}
 
-              {selectedAward && (
-                <ContractDetail
-                  key={selectedAward['Award ID']}
-                  award={selectedAward}
-                  onClose={() => setSelectedAward(null)}
-                />
-              )}
-
               {results !== null && (
                 <ResultsTable
                   data={results}
@@ -147,6 +138,8 @@ export default function App() {
                   isBookmarked={isBookmarked}
                   selectedPiid={selectedPiid}
                   onSelectContract={selectContract}
+                  selectedAward={selectedAward}
+                  onCloseDetail={() => setSelectedAward(null)}
                 />
               )}
 
@@ -168,22 +161,15 @@ export default function App() {
           )}
 
           {tab === 'bookmarks' && (
-            <>
-              {selectedAward && (
-                <ContractDetail
-                  key={selectedAward['Award ID']}
-                  award={selectedAward}
-                  onClose={() => setSelectedAward(null)}
-                />
-              )}
-              <BookmarkedContracts
-                bookmarks={bookmarks}
-                onToggleBookmark={toggle}
-                onClear={clear}
-                selectedPiid={selectedPiid}
-                onSelectContract={selectContract}
-              />
-            </>
+            <BookmarkedContracts
+              bookmarks={bookmarks}
+              onToggleBookmark={toggle}
+              onClear={clear}
+              selectedPiid={selectedPiid}
+              onSelectContract={selectContract}
+              selectedAward={selectedAward}
+              onCloseDetail={() => setSelectedAward(null)}
+            />
           )}
         </main>
       </div>
