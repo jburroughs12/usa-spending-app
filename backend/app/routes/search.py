@@ -86,8 +86,16 @@ def search_awards(
 
         results = [r for r in results if _in_range(r)]
 
+    # Set-aside status isn't returned by the bulk search endpoint (see
+    # client.search_awards), so look it up per-award, in parallel, for
+    # just the page being displayed.
+    internal_ids = [str(r["internal_id"]) for r in results if r.get("internal_id") is not None]
+    set_aside_by_id = client.get_set_aside_bulk(internal_ids) if internal_ids else {}
+
     for row in results:
         row["reseller_partner_match"] = match_competitor(row.get("Recipient Name"))
+        iid = row.get("internal_id")
+        row["Type of Set Aside"] = set_aside_by_id.get(str(iid)) if iid is not None else None
 
     return {
         "results": results,
