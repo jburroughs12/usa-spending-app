@@ -3,6 +3,7 @@
 import hashlib
 import json
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
 import requests
@@ -94,6 +95,30 @@ class USASpendingClient:
     def get_award(self, award_id: str) -> dict:
         """Fetch full award detail via GET /awards/<id>/. No API key or rate limit."""
         return self._get(f"/awards/{award_id}/")
+
+    def get_set_aside_bulk(self, award_ids: list[str], max_workers: int = 15) -> dict[str, str | None]:
+        """Look up set-aside status for multiple awards.
+
+        The bulk search endpoint (search_awards) can't return this field —
+        "Type of Set Aside" isn't in its documented field list, and unknown
+        fields are silently dropped. It's only available via the per-award
+        detail endpoint, so fan out individual lookups in parallel (each
+        cached for 1h same as any other _get() call) instead of one bulk call.
+        """
+        def _fetch(award_id: str) -> tuple[str, str | None]:
+            try:
+                record = self.get_award(award_id)
+                txn = record.get("latest_transaction_contract_data") or {}
+                description = txn.get("type_set_aside_description") or txn.get("type_set_aside")
+                return award_id, description
+            except Exception:
+                return award_id, None
+
+        results: dict[str, str | None] = {}
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            for award_id, description in executor.map(_fetch, award_ids):
+                results[award_id] = description
+        return results
 
     def get_toptier_agencies(self) -> dict:
         """Fetch all federal top-tier agencies. No API key or rate limit."""
